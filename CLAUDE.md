@@ -103,14 +103,17 @@ Não implementar: chat, gamificação, white-label, relatórios interprogramas, 
 ## Como rodar localmente
 
 ```bash
-# Restaurar dependências
+# 1. Subir SQL Server (Docker Compose)
+docker compose up -d
+
+# 2. Restaurar dependências
 dotnet restore
 
-# Aplicar migrations
-dotnet ef database update
+# 3. Aplicar migrations
+dotnet ef database update --project Trail.Api
 
-# Rodar a API
+# 4. Rodar a API
 dotnet run --project Trail.Api
 ```
 
-A API estará disponível em `https://localhost:5001` com Swagger em `/swagger`.
+A API estará disponível em `http://localhost:5108` com Swagger em `/swagger`.

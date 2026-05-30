@@ -38,27 +38,34 @@ git clone <url-do-repo>
 cd trail-backend
 ```
 
-### 2. Subir o SQL Server com Docker
+### 2. Subir o SQL Server
 
+O projeto inclui um arquivo `docker-compose.yml` para facilitar a configuração do banco.
+
+**Via Docker Compose (Recomendado):**
+```bash
+docker compose up -d
+```
+
+**Via Docker Run (Alternativa):**
 ```bash
 docker run \
   -e "ACCEPT_EULA=Y" \
-  -e "SA_PASSWORD=Trail@1234" \
+  -e "SA_PASSWORD=YourStrong@Password123" \
   -p 1433:1433 \
-  -d mcr.microsoft.com/mssql/server:2022-latest
+  --user 0 \
+  -d mcr.microsoft.com/mssql/server:2019-latest
 ```
-
-> Se já tiver SQL Server local instalado, ajuste a connection string em `appsettings.Development.json`.
 
 ### 3. Configurar o ambiente de desenvolvimento
 
-O arquivo `Trail.Api/appsettings.Development.json` **não é versionado** (está no `.gitignore`).  
-Crie-o na raiz do projeto `Trail.Api/`:
+Crie o arquivo `Trail.Api/appsettings.Development.json` **não é versionado** (está no `.gitignore`).  
+Crie-o na raiz do projeto `Trail.Api/` (ou use o existente):
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=TrailDb;User Id=sa;Password=Trail@1234;TrustServerCertificate=True;"
+    "DefaultConnection": "Server=localhost,1433;Database=TrailDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;"
   },
   "Jwt": {
     "Secret": "trail-super-secret-key-for-dev-only-32chars!!"
