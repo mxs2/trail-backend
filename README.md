@@ -59,7 +59,7 @@ docker run \
 
 ### 3. Configurar o ambiente de desenvolvimento
 
-Crie o arquivo `Trail.Api/appsettings.Development.json` **não é versionado** (está no `.gitignore`).  
+O arquivo `Trail.Api/appsettings.Development.json` **não é versionado** (está no `.gitignore`).  
 Crie-o na raiz do projeto `Trail.Api/` (ou use o existente):
 
 ```json
