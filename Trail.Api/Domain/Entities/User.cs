@@ -13,4 +13,8 @@ public class User
 
     public ICollection<Submission> Submissions { get; set; } = [];
     public ICollection<Submission> Reviews { get; set; } = [];
+    public ICollection<TrailEnrollment> TrailEnrollments { get; set; } = [];
+    public UserSettings? Settings { get; set; }
+    public ICollection<UserActivity> Activities { get; set; } = [];
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 }

@@ -24,6 +24,23 @@ public class AuthService(AppDbContext db, ITokenService tokenService)
         };
         user.PasswordHash = _hasher.HashPassword(user, request.Password);
 
+        user.Settings = new UserSettings
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TwoFactorEnabled = false,
+            PublicProfile = false,
+            EmailNotifications = true,
+            StudyReminder = true,
+            AiSuggestions = true,
+            WeeklyReport = true,
+            Language = "pt-BR",
+            DailyStudyGoal = "1h",
+            Autoplay = true,
+            Subtitles = false,
+            UpdatedAt = DateTime.UtcNow
+        };
+
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
