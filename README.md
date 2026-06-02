@@ -96,6 +96,68 @@ Spec OpenAPI: `https://localhost:7xxx/openapi/v1.json`
 
 ---
 
+## Autenticação — exemplos rápidos
+
+Fluxo básico: `login` retorna `token` (JWT) e `refreshToken` — o cliente usa o JWT no header `Authorization: Bearer <token>` e usa o `refreshToken` para renovar quando o JWT expirar.
+
+Exemplo `POST /auth/login` (body):
+
+```json
+{
+  "email": "student@example.com",
+  "password": "Password1!"
+}
+```
+
+Resposta (200):
+
+```json
+{
+  "token": "<jwt>",
+  "refreshToken": "<refresh-token>",
+  "role": "Student",
+  "name": "Student Name"
+}
+```
+
+Exemplo `POST /auth/refresh` (body):
+
+```json
+{
+  "refreshToken": "<refresh-token>"
+}
+```
+
+Resposta (200):
+
+```json
+{
+  "token": "<new-jwt>",
+  "refreshToken": "<new-refresh-token>",
+  "role": "Student",
+  "name": "Student Name"
+}
+```
+
+Exemplo `POST /auth/logout` (body):
+
+```json
+{
+  "refreshToken": "<refresh-token-to-revoke>"
+}
+```
+
+Resposta: `204 No Content` (quando válido)
+
+Configuração do tempo de expiração do refresh token (dev): no `appsettings.Development.json` adicione a seção:
+
+```json
+"Refresh": {
+  "ExpirationDays": 14
+}
+```
+
+
 ## Endpoints
 
 ### Implementados
