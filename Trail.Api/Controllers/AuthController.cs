@@ -41,11 +41,14 @@ public class AuthController(AuthService authService) : ControllerBase
     [Authorize]
     public IActionResult Me()
     {
-        var id = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        var email = User.FindFirstValue(JwtRegisteredClaimNames.Email);
-        var name = User.FindFirstValue("name");
-        var role = User.FindFirstValue(ClaimTypes.Role);
+        var id = GetClaimValue(JwtRegisteredClaimNames.Sub, ClaimTypes.NameIdentifier);
+        var email = GetClaimValue(JwtRegisteredClaimNames.Email, ClaimTypes.Email);
+        var name = GetClaimValue("name", ClaimTypes.Name);
+        var role = GetClaimValue(ClaimTypes.Role, "role");
 
         return Ok(new { id, email, name, role });
     }
+
+    private string? GetClaimValue(params string[] claimTypes)
+        => claimTypes.Select(User.FindFirstValue).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 }

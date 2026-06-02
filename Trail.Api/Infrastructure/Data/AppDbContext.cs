@@ -42,7 +42,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Submission>(e =>
         {
             e.HasKey(s => s.Id);
-            e.Property(s => s.DeliveryUrl).IsRequired();
+            e.Property(s => s.DeliveryUrl).IsRequired().HasMaxLength(2048);
+            e.Property(s => s.Feedback).HasMaxLength(4000);
             e.Property(s => s.Status).HasConversion<string>();
 
             e.HasOne(s => s.Student)

@@ -1,5 +1,7 @@
 using Trail.Api.Extensions;
 using Trail.Api.Infrastructure.Data;
+using Trail.Api.Swagger;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +10,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new() { Title = "Trail API", Version = "v1" });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Paste only the JWT token here"
+    });
+
+    options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer", null, null),
+            []
+        }
+    });
+
+    options.OperationFilter<SwaggerBearerAuthOperationFilter>();
 });
 builder.Services.AddProblemDetails();
 

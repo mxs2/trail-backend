@@ -12,6 +12,7 @@ public static class DbSeeder
     {
         await SeedUsersAsync(db, logger);
         await SeedTrailsAsync(db, logger);
+        await SeedSubmissionsAsync(db, logger);
     }
 
     private static async Task SeedUsersAsync(AppDbContext db, ILogger logger)
@@ -90,5 +91,55 @@ public static class DbSeeder
         db.Trails.AddRange(fundamentos, frontend);
         await db.SaveChangesAsync();
         logger.LogInformation("Trail seed completed: 2 trails and 5 challenges inserted.");
+    }
+
+    private static async Task SeedSubmissionsAsync(AppDbContext db, ILogger logger)
+    {
+        if (await db.Submissions.AnyAsync())
+        {
+            logger.LogInformation("Submission seed skipped: submissions already exist.");
+            return;
+        }
+
+        var student = await db.Users.FirstOrDefaultAsync(u => u.Email == "student@trail.com");
+        var mentor = await db.Users.FirstOrDefaultAsync(u => u.Email == "mentor@trail.com");
+        var firstChallenge = await db.Challenges.OrderBy(c => c.Order).FirstOrDefaultAsync();
+        var reviewedChallenge = await db.Challenges.OrderBy(c => c.Order).Skip(1).FirstOrDefaultAsync();
+
+        if (student is null || mentor is null || firstChallenge is null || reviewedChallenge is null)
+        {
+            logger.LogWarning("Submission seed skipped: required seed entities not found.");
+            return;
+        }
+
+        var submissions = new[]
+        {
+            new Submission
+            {
+                Id = Guid.NewGuid(),
+                StudentId = student.Id,
+                ChallengeId = firstChallenge.Id,
+                DeliveryUrl = "https://github.com/trail/student-submission-1",
+                SubmittedAt = DateTime.UtcNow.AddDays(-2),
+                Status = SubmissionStatus.Submitted
+            },
+            new Submission
+            {
+                Id = Guid.NewGuid(),
+                StudentId = student.Id,
+                ChallengeId = reviewedChallenge.Id,
+                DeliveryUrl = "https://github.com/trail/student-submission-2",
+                SubmittedAt = DateTime.UtcNow.AddDays(-4),
+                Status = SubmissionStatus.Reviewed,
+                ReviewerId = mentor.Id,
+                Score = 92,
+                Feedback = "Boa entrega.",
+                ReviewedAt = DateTime.UtcNow.AddDays(-3)
+            }
+        };
+
+        db.Submissions.AddRange(submissions);
+        await db.SaveChangesAsync();
+        logger.LogInformation("Submission seed completed: 2 submissions inserted.");
     }
 }
