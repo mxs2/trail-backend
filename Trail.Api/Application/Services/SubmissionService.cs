@@ -66,7 +66,7 @@ public class SubmissionService(AppDbContext db)
         if (submission is null)
             return null;
 
-        var reviewerExists = await db.Users.AnyAsync(u => u.Id == reviewerId && (u.Role == UserRole.Mentor || u.Role == UserRole.Manager), ct);
+        var reviewerExists = await db.Users.AnyAsync(u => u.Id == reviewerId && u.Role == UserRole.Mentor, ct);
         if (!reviewerExists)
             return null;
 
@@ -88,12 +88,14 @@ public class SubmissionService(AppDbContext db)
 
         var trails = await db.Trails
             .AsNoTracking()
+            .Where(t => t.Enrollments.Any(e => e.UserId == studentId) || t.Challenges.Any(c => c.Submissions.Any(s => s.StudentId == studentId)))
             .Select(t => new
             {
                 t.Id,
                 t.Name,
                 TotalChallenges = t.Challenges.Count,
                 CompletedChallenges = t.Challenges.Count(c => c.Submissions.Any(s => s.StudentId == studentId && s.Status == SubmissionStatus.Reviewed)),
+                PendingChallenges = t.Challenges.Count(c => c.Submissions.Any(s => s.StudentId == studentId && s.Status == SubmissionStatus.Submitted) && !c.Submissions.Any(s => s.StudentId == studentId && s.Status == SubmissionStatus.Reviewed)),
                 LastSubmissionAt = t.Challenges
                     .SelectMany(c => c.Submissions)
                     .Where(s => s.StudentId == studentId)
@@ -104,15 +106,9 @@ public class SubmissionService(AppDbContext db)
             .OrderBy(t => t.Name)
             .ToListAsync(ct);
 
-        var completedChallenges = await db.Submissions
-            .AsNoTracking()
-            .CountAsync(s => s.StudentId == studentId && s.Status == SubmissionStatus.Reviewed, ct);
-
-        var totalChallenges = await db.Challenges.AsNoTracking().CountAsync(ct);
-        var pendingChallenges = await db.Submissions
-            .AsNoTracking()
-            .Where(s => s.StudentId == studentId && s.Status == SubmissionStatus.Submitted)
-            .CountAsync(ct);
+        var totalChallenges = trails.Sum(t => t.TotalChallenges);
+        var completedChallenges = trails.Sum(t => t.CompletedChallenges);
+        var pendingChallenges = trails.Sum(t => t.PendingChallenges);
 
         var completionRate = totalChallenges == 0
             ? 0m
@@ -130,7 +126,7 @@ public class SubmissionService(AppDbContext db)
                     t.Name,
                     t.TotalChallenges,
                     t.CompletedChallenges,
-                    Math.Max(t.TotalChallenges - t.CompletedChallenges, 0),
+                    t.PendingChallenges,
                     t.TotalChallenges == 0 ? 0m : Math.Round((decimal)t.CompletedChallenges / t.TotalChallenges * 100m, 2),
                     t.LastSubmissionAt))
                 .ToList());
@@ -143,6 +139,13 @@ public class SubmissionService(AppDbContext db)
         var totalChallenges = await db.Challenges.AsNoTracking().CountAsync(ct);
         var totalSubmissions = await db.Submissions.AsNoTracking().CountAsync(ct);
         var reviewedSubmissions = await db.Submissions.AsNoTracking().CountAsync(s => s.Status == SubmissionStatus.Reviewed, ct);
+
+        var reviewedChallenges = await db.Submissions
+            .AsNoTracking()
+            .Where(s => s.Status == SubmissionStatus.Reviewed)
+            .Select(s => s.ChallengeId)
+            .Distinct()
+            .CountAsync(ct);
 
         var averageScore = await db.Submissions
             .AsNoTracking()
@@ -158,7 +161,7 @@ public class SubmissionService(AppDbContext db)
 
         var completionRate = totalChallenges == 0
             ? 0m
-            : Math.Round((decimal)reviewedSubmissions / totalChallenges * 100m, 2);
+            : Math.Round((decimal)reviewedChallenges / totalChallenges * 100m, 2);
 
         var coverageRate = totalSubmissions == 0
             ? 0m

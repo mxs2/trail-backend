@@ -11,4 +11,8 @@
   "Jwt": {
     "Secret": "your-secret-key-minimum-32-characters-long!!"
   }
+  ,
+  "Refresh": {
+    "ExpirationDays": 14
+  }
 }

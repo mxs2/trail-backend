@@ -12,6 +12,7 @@ public static class DbSeeder
     {
         await SeedUsersAsync(db, logger);
         await SeedTrailsAsync(db, logger);
+        await SeedEnrollmentsAndActivityAsync(db, logger);
         await SeedSubmissionsAsync(db, logger);
     }
 
@@ -40,6 +41,22 @@ public static class DbSeeder
                 Role = role
             };
             user.PasswordHash = hasher.HashPassword(user, "Senha@123");
+            user.Settings = new UserSettings
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TwoFactorEnabled = false,
+                PublicProfile = false,
+                EmailNotifications = true,
+                StudyReminder = true,
+                AiSuggestions = true,
+                WeeklyReport = true,
+                Language = "pt-BR",
+                DailyStudyGoal = "1h",
+                Autoplay = true,
+                Subtitles = false,
+                UpdatedAt = DateTime.UtcNow
+            };
             db.Users.Add(user);
             inserted++;
         }
@@ -91,6 +108,57 @@ public static class DbSeeder
         db.Trails.AddRange(fundamentos, frontend);
         await db.SaveChangesAsync();
         logger.LogInformation("Trail seed completed: 2 trails and 5 challenges inserted.");
+    }
+
+    private static async Task SeedEnrollmentsAndActivityAsync(AppDbContext db, ILogger logger)
+    {
+        var student = await db.Users.FirstOrDefaultAsync(u => u.Email == "student@trail.com");
+        var trail = await db.Trails.FirstOrDefaultAsync();
+
+        if (student is null || trail is null)
+        {
+            logger.LogWarning("Base seed skipped: enrollment/activity prerequisites not found.");
+            return;
+        }
+
+        if (!await db.TrailEnrollments.AnyAsync(e => e.UserId == student.Id && e.TrailId == trail.Id))
+        {
+            db.TrailEnrollments.Add(new TrailEnrollment
+            {
+                Id = Guid.NewGuid(),
+                UserId = student.Id,
+                TrailId = trail.Id,
+                EnrolledAt = DateTime.UtcNow.AddDays(-7)
+            });
+        }
+
+        if (!await db.UserActivities.AnyAsync(a => a.UserId == student.Id))
+        {
+            db.UserActivities.AddRange(
+                new UserActivity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = student.Id,
+                    ActivityType = "study",
+                    TargetType = "trail",
+                    TargetId = trail.Id.ToString(),
+                    Minutes = 45,
+                    OccurredAt = DateTime.UtcNow.AddDays(-1)
+                },
+                new UserActivity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = student.Id,
+                    ActivityType = "study",
+                    TargetType = "trail",
+                    TargetId = trail.Id.ToString(),
+                    Minutes = 30,
+                    OccurredAt = DateTime.UtcNow.AddDays(-2)
+                });
+        }
+
+        await db.SaveChangesAsync();
+        logger.LogInformation("Base seed completed: enrollment and activity records inserted.");
     }
 
     private static async Task SeedSubmissionsAsync(AppDbContext db, ILogger logger)

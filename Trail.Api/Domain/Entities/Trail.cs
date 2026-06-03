@@ -8,4 +8,5 @@ public class Trail
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Challenge> Challenges { get; set; } = [];
+    public ICollection<TrailEnrollment> Enrollments { get; set; } = [];
 }

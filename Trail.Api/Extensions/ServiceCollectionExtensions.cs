@@ -28,6 +28,11 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        // Refresh token options
+        services.AddOptions<Trail.Api.Configuration.RefreshOptions>()
+            .BindConfiguration(Trail.Api.Configuration.RefreshOptions.SectionName)
+            .ValidateOnStart();
+
         var secret = configuration["Jwt:Secret"]
             ?? throw new InvalidOperationException("Jwt:Secret is not configured.");
         var issuer = configuration["Jwt:Issuer"]

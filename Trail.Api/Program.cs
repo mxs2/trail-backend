@@ -1,3 +1,4 @@
+using System.Reflection;
 using Trail.Api.Extensions;
 using Trail.Api.Infrastructure.Data;
 using Trail.Api.Swagger;
@@ -10,6 +11,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new() { Title = "Trail API", Version = "v1" });
+    // include XML comments (enable in csproj: GenerateDocumentationFile)
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
