@@ -40,7 +40,7 @@ public class SubmissionsController(SubmissionService submissionService) : Contro
         => Ok(await submissionService.ListPendingAsync(ct));
 
     [HttpPut("{id:guid}/review")]
-    [Authorize(Roles = "Mentor,Manager")]
+    [Authorize(Roles = "Mentor")]
     [ProducesResponseType(typeof(SubmissionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
