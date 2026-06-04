@@ -1,8 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using System.Reflection;
 using Trail.Api.Extensions;
 using Trail.Api.Infrastructure.Data;
 using Trail.Api.Swagger;
-using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +86,17 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    // Ensure database is migrated to the latest version before seeding
+    try 
+    {
+        await db.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+
     await DbSeeder.SeedAsync(db, logger);
 }
 
