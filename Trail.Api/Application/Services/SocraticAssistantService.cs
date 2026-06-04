@@ -13,7 +13,7 @@ namespace Trail.Api.Application.Services;
 ///  - Uses the student's onboarding profile to calibrate depth of explanation.
 ///  - Responds only about the active challenge.
 /// </summary>
-public class SocraticAssistantService(AppDbContext db, IAnthropicService anthropic)
+public class SocraticAssistantService(AppDbContext db, IAiService ai)
 {
     public async Task<SocraticChatResponse> ChatAsync(
         Guid studentId,
@@ -35,11 +35,11 @@ public class SocraticAssistantService(AppDbContext db, IAnthropicService anthrop
 
         // Build message history
         var messages = request.History
-            .Select(h => new AnthropicMessage(h.Role, h.Content))
-            .Append(new AnthropicMessage("user", request.NewMessage))
+            .Select(h => new AiMessage(h.Role, h.Content))
+            .Append(new AiMessage("user", request.NewMessage))
             .ToList();
 
-        var reply = await anthropic.ChatAsync(systemPrompt, messages, maxTokens: 512, ct);
+        var reply = await ai.ChatAsync(systemPrompt, messages, maxTokens: 512, ct);
         return new SocraticChatResponse(reply);
     }
 

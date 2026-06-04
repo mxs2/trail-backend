@@ -15,11 +15,11 @@ namespace Trail.Api.Application.Services;
 /// </summary>
 public class TrailGenerationService(
     AppDbContext db,
-    IAnthropicService anthropic)
+    IAiService ai)
 {
-    // ── Tool schema (Anthropic JSON Schema for structured output) ─────────────
+    // ── Tool schema (Generic AI JSON Schema for structured output) ─────────────
 
-    private static readonly AnthropicTool GenerateTool = new(
+    private static readonly AiTool GenerateTool = new(
         Name: "generate_learning_trail",
         Description:
             "Generate a hyper-personalised software-engineering learning trail " +
@@ -42,9 +42,9 @@ public class TrailGenerationService(
         var userMsg = BuildUserMessage(profile);
 
         // 3. Call AI (tool_choice forces structured output) ───────────────────
-        var generated = await anthropic.InvokeToolAsync<GeneratedTrailDto>(
+        var generated = await ai.InvokeToolAsync<GeneratedTrailDto>(
             system,
-            [new AnthropicMessage("user", userMsg)],
+            [new AiMessage("user", userMsg)],
             GenerateTool,
             ct);
 

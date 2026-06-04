@@ -20,8 +20,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Environment variables
-ENV ASPNETCORE_URLS=http://+:8080
+# Railway dynamic port
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "Trail.Api.dll"]
+ENTRYPOINT ["sh", "-c", "dotnet Trail.Api.dll --urls http://0.0.0.0:${PORT:-8080}"]

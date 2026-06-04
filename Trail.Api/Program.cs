@@ -73,8 +73,10 @@ app.UseSwaggerUI(options =>
 app.MapGet("/", () => Results.Redirect("/swagger"))
     .ExcludeFromDescription();
 
-if (!app.Environment.IsDevelopment())
-    app.UseHttpsRedirection();
+// No Railway, o SSL é terminado no Proxy. 
+// O UseHttpsRedirection pode atrapalhar o healthcheck interno.
+// if (!app.Environment.IsDevelopment())
+//     app.UseHttpsRedirection();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -82,22 +84,28 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Tenta rodar migrações, mas garante que a porta seja aberta
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Starting app on port {Port}", port);
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var dbLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     
-    // Ensure database is migrated to the latest version before seeding
     try 
     {
+        dbLogger.LogInformation("Attempting to run database migrations...");
         await db.Database.MigrateAsync();
+        dbLogger.LogInformation("Migrations completed successfully.");
+        await DbSeeder.SeedAsync(db, dbLogger);
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        dbLogger.LogCritical(ex, "FATAL: Could not connect or migrate database. Check connection string and Firewall.");
+        // Não deixamos travar aqui para que o healthcheck possa ao menos responder algo ou o log aparecer
     }
-
-    await DbSeeder.SeedAsync(db, logger);
 }
 
 app.Run();

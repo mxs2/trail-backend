@@ -71,21 +71,16 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddOptions<Trail.Api.Configuration.AnthropicOptions>()
-            .BindConfiguration(Trail.Api.Configuration.AnthropicOptions.SectionName);
+        services.AddOptions<Trail.Api.Configuration.GeminiOptions>()
+            .BindConfiguration(Trail.Api.Configuration.GeminiOptions.SectionName);
 
-        // Dedicated Anthropic HTTP client — 120 s timeout covers LLM latency
-        services.AddHttpClient("anthropic", client =>
+        services.AddHttpClient("gemini", client =>
         {
-            client.BaseAddress = new Uri("https://api.anthropic.com/v1/");
-            var key = configuration["Anthropic:ApiKey"] ?? "";
-            if (!string.IsNullOrWhiteSpace(key))
-                client.DefaultRequestHeaders.Add("x-api-key", key);
-            client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+            client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
             client.Timeout = TimeSpan.FromSeconds(120);
         });
 
-        services.AddScoped<IAnthropicService, AnthropicService>();
+        services.AddScoped<IAiService, GeminiService>();
         services.AddScoped<TrailGenerationService>();
         services.AddScoped<SocraticAssistantService>();
         services.AddScoped<GitHubReviewService>();

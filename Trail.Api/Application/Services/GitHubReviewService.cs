@@ -21,10 +21,10 @@ namespace Trail.Api.Application.Services;
 /// </summary>
 public class GitHubReviewService(
     AppDbContext db,
-    IAnthropicService anthropic,
+    IAiService ai,
     IHttpClientFactory httpClientFactory)
 {
-    private static readonly AnthropicTool ReviewTool = new(
+    private static readonly AiTool ReviewTool = new(
         Name: "generate_code_review_draft",
         Description: "Analyse student code against challenge criteria and produce a structured review draft.",
         InputSchema: BuildReviewSchema());
@@ -50,9 +50,9 @@ public class GitHubReviewService(
         var system = BuildSystemPrompt(submission.Challenge.Title, submission.Challenge.Description);
         var userMsg = BuildUserMessage(codeContext);
 
-        var draft = await anthropic.InvokeToolAsync<AiReviewDraft>(
+        var draft = await ai.InvokeToolAsync<AiReviewDraft>(
             system,
-            [new AnthropicMessage("user", userMsg)],
+            [new AiMessage("user", userMsg)],
             ReviewTool,
             ct);
 
