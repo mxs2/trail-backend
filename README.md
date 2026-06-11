@@ -96,6 +96,42 @@ Spec OpenAPI: `https://localhost:7xxx/openapi/v1.json`
 
 ---
 
+## Testes
+
+Os testes ficam no projeto `Trail.Api.Tests/` (xUnit) e **não dependem de banco de dados**: os testes unitários usam o provedor **EF Core InMemory** e os de integração sobem a API com `WebApplicationFactory`, trocando o SQL Server por um banco em memória. Ou seja, basta o .NET SDK — não é preciso subir o Docker nem aplicar migrations.
+
+### Rodar todos os testes
+
+```bash
+dotnet test
+```
+
+> Há dois arquivos de solução na raiz (`Trail.slnx` e `trail-backend.sln`). Caso o comando acima fique ambíguo, aponte a solução ou o projeto explicitamente:
+>
+> ```bash
+> dotnet test Trail.slnx
+> # ou
+> dotnet test Trail.Api.Tests/Trail.Api.Tests.csproj
+> ```
+
+### Rodar um teste específico (filtro)
+
+```bash
+dotnet test --filter "FullyQualifiedName~AuthServiceTests"
+```
+
+### O que é coberto
+
+| Camada | Arquivo | Foco |
+|--------|---------|------|
+| Unitário | `Services/AuthServiceTests.cs` | Registro (email duplicado), login (senha certa/errada), hash de senha |
+| Unitário | `Services/TokenServiceTests.cs` | Claims do JWT (`sub`/`email`/`role`) e expiração |
+| Unitário | `Services/TrailServiceTests.cs` | Filtro por nível, busca textual, desafios ordenados |
+| Unitário | `Services/SubmissionServiceTests.cs` | Regras de submissão e revisão, fila de pendentes |
+| Integração | `Integration/EndpointsIntegrationTests.cs` | `/health`, 401 sem token, login, RBAC (403) |
+
+---
+
 ## Autenticação — exemplos rápidos
 
 Fluxo básico: `login` retorna `token` (JWT) e `refreshToken` — o cliente usa o JWT no header `Authorization: Bearer <token>` e usa o `refreshToken` para renovar quando o JWT expirar.

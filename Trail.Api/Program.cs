@@ -74,3 +74,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Exposto para testes de integração (WebApplicationFactory<Program>).
+public partial class Program { }
